@@ -1,0 +1,302 @@
+
+<div style="font-family:'Segoe UI',sans-serif;direction:rtl;min-height:600px;background:var(--color-background-tertiary);padding:16px;box-sizing:border-box;">
+
+<div style="display:grid;grid-template-columns:260px 1fr;gap:16px;min-height:580px;">
+
+<!-- Sidebar -->
+<div style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;max-height:580px;">
+
+  <!-- Upload -->
+  <div id="dropzone" onclick="document.getElementById('fileInput').click()" style="border:2px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);padding:16px;text-align:center;cursor:pointer;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
+    <input type="file" id="fileInput" accept="image/*" style="display:none">
+    <div id="uploadIcon" style="font-size:28px;">🖼</div>
+    <div id="uploadText" style="font-size:13px;font-weight:500;color:var(--color-text-primary);">ارفع صورتك</div>
+    <div style="font-size:11px;color:var(--color-text-secondary);">PNG / JPG / WEBP</div>
+    <img id="previewThumb" style="display:none;max-height:80px;max-width:100%;border-radius:6px;">
+  </div>
+
+  <!-- Fill Mode -->
+  <div>
+    <div style="font-size:10px;font-weight:500;color:var(--color-text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">طريقة ملء الفراغ</div>
+    <div id="fillModes" style="display:flex;flex-direction:column;gap:4px;"></div>
+    <div id="colorPicker" style="display:none;margin-top:8px;display:none;align-items:center;gap:8px;">
+      <span style="font-size:12px;color:var(--color-text-secondary);">اللون:</span>
+      <input type="color" id="bgColor" value="#ffffff" style="width:32px;height:26px;border:none;border-radius:4px;cursor:pointer;padding:0;">
+    </div>
+  </div>
+
+  <!-- Platforms -->
+  <div style="flex:1;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <div style="font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:1px;">المنصات <span id="selCount">(0)</span></div>
+      <div style="display:flex;gap:4px;">
+        <button onclick="selectAll()" style="font-size:10px;padding:2px 7px;border-radius:4px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;">الكل</button>
+        <button onclick="clearAll()" style="font-size:10px;padding:2px 7px;border-radius:4px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;">مسح</button>
+      </div>
+    </div>
+    <div id="platformList"></div>
+  </div>
+
+  <!-- Convert Button -->
+  <button id="convertBtn" onclick="processImages()" style="padding:12px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);color:var(--color-text-secondary);font-size:13px;font-weight:500;cursor:not-allowed;font-family:inherit;transition:all 0.2s;">
+    حوّل الصور
+  </button>
+</div>
+
+<!-- Results -->
+<div id="mainArea" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;overflow-y:auto;max-height:580px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="text-align:center;opacity:0.35;">
+    <div style="font-size:48px;margin-bottom:10px;">🎨</div>
+    <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);">ارفع صورة واختار المنصات</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:4px;">النتيجة هتظهر هنا</div>
+  </div>
+</div>
+
+</div>
+<canvas id="workCanvas" style="display:none;"></canvas>
+</div>
+
+<script>
+const PLATFORMS = [
+  {g:"Instagram",items:[
+    {id:"ig-sq",n:"Post مربع",w:1080,h:1080},
+    {id:"ig-land",n:"Post أفقي",w:1080,h:566},
+    {id:"ig-story",n:"Story / Reels",w:1080,h:1920},
+  ]},
+  {g:"Facebook",items:[
+    {id:"fb-post",n:"Post",w:1200,h:630},
+    {id:"fb-ad",n:"Ad",w:1200,h:628},
+    {id:"fb-cover",n:"Cover",w:820,h:312},
+  ]},
+  {g:"Twitter / X",items:[
+    {id:"tw-post",n:"Post",w:1200,h:675},
+    {id:"tw-hdr",n:"Header",w:1500,h:500},
+  ]},
+  {g:"YouTube",items:[
+    {id:"yt-thumb",n:"Thumbnail",w:1280,h:720},
+    {id:"yt-banner",n:"Banner",w:2560,h:1440},
+  ]},
+  {g:"LinkedIn",items:[
+    {id:"li-post",n:"Post",w:1200,h:627},
+    {id:"li-cover",n:"Cover",w:1584,h:396},
+  ]},
+  {g:"Google Ads",items:[
+    {id:"g-rect",n:"Rectangle 300×250",w:300,h:250},
+    {id:"g-lead",n:"Leaderboard 728×90",w:728,h:90},
+    {id:"g-sky",n:"Skyscraper 160×600",w:160,h:600},
+  ]},
+  {g:"أخرى",items:[
+    {id:"tiktok",n:"TikTok / Reels",w:1080,h:1920},
+    {id:"pinterest",n:"Pinterest Pin",w:1000,h:1500},
+    {id:"wa",n:"WhatsApp Status",w:1080,h:1920},
+  ]},
+];
+
+const ALL = PLATFORMS.flatMap(g=>g.items);
+
+const FILLS = [
+  {id:"extend",label:"امتداد ألوان",desc:"الأجمل للتصاميم"},
+  {id:"blur",label:"Blur خلفية",desc:"من الصورة نفسها"},
+  {id:"color",label:"لون خلفية",desc:"تختار اللون"},
+  {id:"stretch",label:"مط الصورة",desc:"ملء كامل"},
+];
+
+let selectedIds = ["ig-sq","ig-story","fb-post","fb-ad"];
+let fillMode = "extend";
+let imgEl = null;
+
+function renderFills() {
+  const c = document.getElementById("fillModes");
+  c.innerHTML = "";
+  FILLS.forEach(f=>{
+    const d = document.createElement("div");
+    const active = fillMode===f.id;
+    d.style.cssText = `padding:8px 10px;border-radius:var(--border-radius-md);cursor:pointer;border:0.5px solid ${active?"var(--color-border-primary)":"var(--color-border-tertiary)"};background:${active?"var(--color-background-secondary)":"transparent"};transition:all 0.15s;`;
+    d.innerHTML = `<div style="font-size:12px;font-weight:500;color:var(--color-text-primary);">${f.label}</div><div style="font-size:10px;color:var(--color-text-secondary);">${f.desc}</div>`;
+    d.onclick = ()=>{ fillMode=f.id; renderFills(); document.getElementById("colorPicker").style.display=f.id==="color"?"flex":"none"; };
+    c.appendChild(d);
+  });
+}
+
+function renderPlatforms() {
+  const c = document.getElementById("platformList");
+  c.innerHTML = "";
+  PLATFORMS.forEach(grp=>{
+    const gLabel = document.createElement("div");
+    gLabel.style.cssText = "font-size:10px;color:var(--color-text-secondary);margin:8px 0 4px;font-weight:500;";
+    gLabel.textContent = grp.g;
+    c.appendChild(gLabel);
+    grp.items.forEach(p=>{
+      const d = document.createElement("div");
+      const sel = selectedIds.includes(p.id);
+      d.style.cssText = `display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:var(--border-radius-md);cursor:pointer;margin-bottom:3px;border:0.5px solid ${sel?"var(--color-border-primary)":"var(--color-border-tertiary)"};background:${sel?"var(--color-background-secondary)":"transparent"};transition:all 0.12s;`;
+      d.innerHTML = `<div style="width:14px;height:14px;border-radius:3px;border:0.5px solid ${sel?"var(--color-border-primary)":"var(--color-border-secondary)"};background:${sel?"var(--color-background-info)":"transparent"};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;color:var(--color-text-info);">${sel?"✓":""}</div><div style="flex:1;"><div style="font-size:11px;font-weight:500;color:var(--color-text-primary);">${p.n}</div><div style="font-size:9px;color:var(--color-text-secondary);">${p.w}×${p.h}</div></div>`;
+      d.onclick = ()=>{ selectedIds = sel ? selectedIds.filter(x=>x!==p.id) : [...selectedIds,p.id]; renderPlatforms(); updateCount(); updateBtn(); };
+      c.appendChild(d);
+    });
+  });
+}
+
+function updateCount() {
+  document.getElementById("selCount").textContent = `(${selectedIds.length})`;
+}
+
+function updateBtn() {
+  const btn = document.getElementById("convertBtn");
+  const ready = imgEl && selectedIds.length>0;
+  btn.style.background = ready ? "var(--color-background-info)" : "var(--color-background-secondary)";
+  btn.style.color = ready ? "var(--color-text-info)" : "var(--color-text-secondary)";
+  btn.style.borderColor = ready ? "var(--color-border-info)" : "var(--color-border-secondary)";
+  btn.style.cursor = ready ? "pointer" : "not-allowed";
+  btn.textContent = ready ? `حوّل (${selectedIds.length} منصة)` : "حوّل الصور";
+}
+
+function selectAll() { selectedIds = ALL.map(p=>p.id); renderPlatforms(); updateCount(); updateBtn(); }
+function clearAll()  { selectedIds = []; renderPlatforms(); updateCount(); updateBtn(); }
+
+function sampleEdge(ctx, side, w, h) {
+  const N=20; let r=0,g=0,b=0;
+  for(let i=0;i<N;i++){
+    const t=i/(N-1); let x,y;
+    if(side==="left")  {x=0;    y=Math.round(t*(h-1));}
+    if(side==="right") {x=w-1;  y=Math.round(t*(h-1));}
+    if(side==="top")   {x=Math.round(t*(w-1));y=0;}
+    if(side==="bottom"){x=Math.round(t*(w-1));y=h-1;}
+    const d=ctx.getImageData(x,y,1,1).data;
+    r+=d[0];g+=d[1];b+=d[2];
+  }
+  return [Math.round(r/N),Math.round(g/N),Math.round(b/N)];
+}
+
+function resizeOne(img, tw, th) {
+  const c = document.getElementById("workCanvas");
+  c.width=tw; c.height=th;
+  const ctx = c.getContext("2d");
+  const sr=img.width/img.height, dr=tw/th;
+  if(fillMode==="stretch"){ctx.drawImage(img,0,0,tw,th);return c.toDataURL("image/jpeg",0.92);}
+  let dw,dh;
+  if(sr>dr){dw=tw;dh=dw/sr;}else{dh=th;dw=dh*sr;}
+  const dx=Math.round((tw-dw)/2), dy=Math.round((th-dh)/2);
+  if(fillMode==="blur"){
+    let bw,bh;
+    if(sr>dr){bh=th;bw=bh*sr;}else{bw=tw;bh=bw/sr;}
+    ctx.filter="blur(28px) brightness(0.7) saturate(1.4)";
+    ctx.drawImage(img,(tw-bw)/2,(th-bh)/2,bw,bh);
+    ctx.filter="none";
+  } else if(fillMode==="color"){
+    ctx.fillStyle=document.getElementById("bgColor").value;
+    ctx.fillRect(0,0,tw,th);
+  } else if(fillMode==="extend"){
+    const tmp=document.createElement("canvas");
+    tmp.width=Math.round(dw);tmp.height=Math.round(dh);
+    tmp.getContext("2d").drawImage(img,0,0,tmp.width,tmp.height);
+    const tc=tmp.getContext("2d");
+    ctx.fillStyle="#000";ctx.fillRect(0,0,tw,th);
+    if(dx>0){
+      const [lr,lg,lb]=sampleEdge(tc,"left",tmp.width,tmp.height);
+      const [rr,rg,rb]=sampleEdge(tc,"right",tmp.width,tmp.height);
+      ctx.fillStyle=`rgb(${lr},${lg},${lb})`;ctx.fillRect(0,0,dx,th);
+      ctx.fillStyle=`rgb(${rr},${rg},${rb})`;ctx.fillRect(dx+Math.round(dw),0,tw,th);
+    }
+    if(dy>0){
+      const [tr,tg,tb]=sampleEdge(tc,"top",tmp.width,tmp.height);
+      const [br,bg2,bb]=sampleEdge(tc,"bottom",tmp.width,tmp.height);
+      ctx.fillStyle=`rgb(${tr},${tg},${tb})`;ctx.fillRect(0,0,tw,dy);
+      ctx.fillStyle=`rgb(${br},${bg2},${bb})`;ctx.fillRect(0,dy+Math.round(dh),tw,th);
+    }
+  }
+  ctx.drawImage(img,dx,dy,Math.round(dw),Math.round(dh));
+  return c.toDataURL("image/jpeg",0.92);
+}
+
+function processImages() {
+  if(!imgEl||!selectedIds.length) return;
+  const btn=document.getElementById("convertBtn");
+  btn.textContent="جاري التحويل...";
+  btn.style.cursor="not-allowed";
+  setTimeout(()=>{
+    const results = selectedIds.map(id=>{
+      const p=ALL.find(x=>x.id===id);
+      return {...p, dataUrl: resizeOne(imgEl,p.w,p.h)};
+    });
+    showResults(results);
+    btn.textContent=`حوّل (${selectedIds.length} منصة)`;
+    btn.style.cursor="pointer";
+  },60);
+}
+
+function showResults(results) {
+  const ma = document.getElementById("mainArea");
+  ma.style.justifyContent="flex-start";
+  ma.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;width:100%;">
+      <div style="font-size:13px;font-weight:500;color:var(--color-text-primary);">النتايج (${results.length} صورة)</div>
+      <button onclick="dlAll()" style="padding:6px 14px;background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-md);color:var(--color-text-success);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;">تحميل الكل</button>
+    </div>
+    <div id="previewArea" style="width:100%;margin-bottom:14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;text-align:center;"></div>
+    <div id="thumbGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;width:100%;"></div>
+  `;
+  window._results = results;
+  const grid = document.getElementById("thumbGrid");
+  results.forEach((r,i)=>{
+    const card = document.createElement("div");
+    card.style.cssText = "background:var(--color-background-secondary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);overflow:hidden;cursor:pointer;transition:border 0.15s;";
+    card.innerHTML = `
+      <div style="padding:8px;text-align:center;background:var(--color-background-tertiary);">
+        <img src="${r.dataUrl}" style="max-height:80px;max-width:100%;border-radius:4px;">
+      </div>
+      <div style="padding:6px 8px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:10px;font-weight:500;color:var(--color-text-primary);">${r.n}</div>
+          <div style="font-size:9px;color:var(--color-text-secondary);">${r.w}×${r.h}</div>
+        </div>
+        <button onclick="event.stopPropagation();dlOne(${i})" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:4px;font-size:11px;cursor:pointer;padding:3px 6px;color:var(--color-text-secondary);">⬇</button>
+      </div>
+    `;
+    card.onclick = ()=>{ showPreview(r); };
+    grid.appendChild(card);
+  });
+  showPreview(results[0]);
+}
+
+function showPreview(r) {
+  document.getElementById("previewArea").innerHTML = `
+    <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;">${r.n} — ${r.w}×${r.h}px</div>
+    <img src="${r.dataUrl}" style="max-width:100%;max-height:280px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);">
+  `;
+}
+
+function dlOne(i) {
+  const r = window._results[i];
+  const a=document.createElement("a");a.href=r.dataUrl;a.download=`${r.id}-${r.w}x${r.h}.jpg`;a.click();
+}
+
+function dlAll() {
+  window._results.forEach((r,i)=>setTimeout(()=>{ const a=document.createElement("a");a.href=r.dataUrl;a.download=`${r.id}-${r.w}x${r.h}.jpg`;a.click(); },i*100));
+}
+
+document.getElementById("fileInput").onchange = e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const url=URL.createObjectURL(file);
+  const el=new Image();
+  el.onload=()=>{
+    imgEl=el;
+    document.getElementById("previewThumb").src=url;
+    document.getElementById("previewThumb").style.display="block";
+    document.getElementById("uploadIcon").style.display="none";
+    document.getElementById("uploadText").textContent="اضغط لتغيير الصورة";
+    updateBtn();
+  };
+  el.src=url;
+};
+
+const dz = document.getElementById("dropzone");
+dz.ondragover = e=>{ e.preventDefault(); dz.style.borderColor="var(--color-border-primary)"; };
+dz.ondragleave = ()=>{ dz.style.borderColor="var(--color-border-secondary)"; };
+dz.ondrop = e=>{ e.preventDefault(); dz.style.borderColor="var(--color-border-secondary)"; const f=e.dataTransfer.files[0]; if(f){ document.getElementById("fileInput").files=e.dataTransfer.files; document.getElementById("fileInput").dispatchEvent(new Event("change")); } };
+
+renderFills();
+renderPlatforms();
+updateCount();
+updateBtn();
+</script>
