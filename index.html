@@ -1,54 +1,62 @@
-<div style="font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction:rtl; background:#f4f7f6; padding:20px; border-radius:15px; color:#333;">
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>مُعدل مقاسات الصور الاحترافي</title>
+</head>
+<body style="margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction:rtl; background:#f4f7f6; color:#333;">
 
-<div style="display:grid; grid-template-columns:350px 1fr; gap:25px; max-width:1400px; margin:0 auto;">
+<div style="padding:20px;">
+    <div style="display:grid; grid-template-columns:350px 1fr; gap:25px; max-width:1400px; margin:0 auto;">
 
-  <div style="background:#fff; border-radius:12px; padding:25px; box-shadow:0 8px 30px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:20px; max-height:90vh; overflow-y:auto;">
-    
-    <h3 style="margin:0; font-size:18px; color:#1a73e8;">📸 1. رفع الصورة الأصلية</h3>
-    <div id="dropzone" onclick="document.getElementById('fileInput').click()" style="border:2px dashed #1a73e8; border-radius:12px; padding:20px; text-align:center; cursor:pointer; background:#f8fbff; transition:0.3s;">
-      <input type="file" id="fileInput" accept="image/*" style="display:none">
-      <img id="previewThumb" style="display:none; max-height:120px; margin:0 auto; border-radius:8px; margin-bottom:10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-      <div id="uploadText" style="font-size:14px; font-weight:600; color:#1a73e8;">اضغطي هنا لرفع الصورة</div>
+        <div style="background:#fff; border-radius:12px; padding:25px; box-shadow:0 8px 30px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:20px; max-height:90vh; overflow-y:auto; position:sticky; top:20px;">
+            
+            <h3 style="margin:0; font-size:18px; color:#1a73e8;">📸 1. رفع الصورة الأصلية</h3>
+            <div id="dropzone" onclick="document.getElementById('fileInput').click()" style="border:2px dashed #1a73e8; border-radius:12px; padding:20px; text-align:center; cursor:pointer; background:#f8fbff; transition:0.3s;">
+                <input type="file" id="fileInput" accept="image/*" style="display:none">
+                <img id="previewThumb" style="display:none; max-height:120px; margin:0 auto; border-radius:8px; margin-bottom:10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                <div id="uploadText" style="font-size:14px; font-weight:600; color:#1a73e8;">اضغطي هنا لرفع الصورة</div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid #eee;">
+
+            <h3 style="margin:0; font-size:18px; color:#1a73e8;">📏 2. مقاس يدوي</h3>
+            <div style="display:flex; gap:10px; background:#f0f7ff; padding:10px; border-radius:8px;">
+                <input type="number" id="customW" placeholder="عرض" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:5px;">
+                <input type="number" id="customH" placeholder="طول" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:5px;">
+                <button onclick="addCustomSize()" style="background:#1a73e8; color:white; border:none; padding:0 15px; border-radius:5px; cursor:pointer; font-weight:bold;">+</button>
+            </div>
+
+            <hr style="border:0; border-top:1px solid #eee;">
+
+            <h3 style="margin:0; font-size:18px; color:#1a73e8;">🎯 3. اختر المقاسات</h3>
+            <div id="platformList" style="display:flex; flex-direction:column; gap:5px;"></div>
+
+            <button id="convertBtn" onclick="processImages()" style="width:100%; padding:18px; background:#1a73e8; color:white; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:not-allowed; opacity:0.5; transition:0.3s;">
+                عرض النتائج وتعديل الزوايا
+            </button>
+        </div>
+
+        <div id="mainArea" style="background:#fff; border-radius:12px; padding:30px; box-shadow:0 8px 30px rgba(0,0,0,0.05); min-height:600px;">
+            <div id="emptyState" style="text-align:center; padding-top:150px; color:#adb5bd;">
+                <div style="font-size:70px; margin-bottom:20px;">✨</div>
+                <p style="font-size:20px; font-weight:bold;">النتائج ستظهر هنا بأعلى جودة</p>
+                <p>سأقوم بإظهار أزرار التحكم المناسبة فقط لكل مقاس (طولياً أو عرضياً)!</p>
+            </div>
+            
+            <div id="resultsContent" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:2px solid #f0f2f5; padding-bottom:15px;">
+                    <h2 style="margin:0; font-size:24px; color:#1a73e8;">النتائج الاحترافية HD ✨</h2>
+                    <button onclick="downloadAll()" style="background:#28a745; color:white; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-weight:bold;">تحميل الكل بالجودة الأصلية</button>
+                </div>
+                <div id="grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:30px;"></div>
+            </div>
+        </div>
+
     </div>
-
-    <hr style="border:0; border-top:1px solid #eee;">
-
-    <h3 style="margin:0; font-size:18px; color:#1a73e8;">📏 2. مقاس يدوي</h3>
-    <div style="display:flex; gap:10px; background:#f0f7ff; padding:10px; border-radius:8px;">
-        <input type="number" id="customW" placeholder="عرض" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:5px;">
-        <input type="number" id="customH" placeholder="طول" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:5px;">
-        <button onclick="addCustomSize()" style="background:#1a73e8; color:white; border:none; padding:0 15px; border-radius:5px; cursor:pointer; font-weight:bold;">+</button>
-    </div>
-
-    <hr style="border:0; border-top:1px solid #eee;">
-
-    <h3 style="margin:0; font-size:18px; color:#1a73e8;">🎯 3. اختر المقاسات</h3>
-    <div id="platformList" style="display:flex; flex-direction:column; gap:5px;"></div>
-
-    <button id="convertBtn" onclick="processImages()" style="width:100%; padding:18px; background:#1a73e8; color:white; border:none; border-radius:10px; font-size:16px; font-weight:bold; cursor:not-allowed; opacity:0.5; transition:0.3s;">
-      تحميل النتائج النهائيه  HD
-    </button>
-  </div>
-
-  <div id="mainArea" style="background:#fff; border-radius:12px; padding:30px; box-shadow:0 8px 30px rgba(0,0,0,0.05); min-height:600px;">
-    <div id="emptyState" style="text-align:center; padding-top:150px; color:#adb5bd;">
-       <div style="font-size:70px; margin-bottom:20px;">✨</div>
-       <p style="font-size:20px; font-weight:bold;">النتائج ستظهر هنا بأعلى جودة</p>
-       <p>تقدري تتحكمي في تحريك الصورة في الـ 4 اتجاهات لكل مقاس لوحده!</p>
-    </div>
-    
-    <div id="resultsContent" style="display:none;">
-       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:2px solid #f0f2f5; padding-bottom:15px;">
-          <h2 style="margin:0; font-size:24px; color:#1a73e8;">النتائج الاحترافية HD ✨</h2>
-          <button onclick="downloadAll()" style="background:#28a745; color:white; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-weight:bold;">تحميل الكل بالجودة الأصلية</button>
-       </div>
-       <div id="grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:30px;"></div>
-    </div>
-  </div>
-
 </div>
+
 <canvas id="workCanvas" style="display:none;"></canvas>
-</div>
 
 <script>
 const AD_SIZES = [
@@ -61,7 +69,7 @@ const AD_SIZES = [
 let selectedSizes = [...AD_SIZES];
 let customSizes = [];
 let sourceImg = null;
-let currentOffsets = {}; // Stores { key: {x: 0.5, y: 0.5} }
+let currentOffsets = {}; 
 
 function renderPlatforms() {
   const container = document.getElementById("platformList");
@@ -126,6 +134,14 @@ function renderGrid() {
     if (!currentOffsets[key]) currentOffsets[key] = {x: 0.5, y: 0.5};
 
     const dataUrl = drawHQ(size.w, size.h, currentOffsets[key].x, currentOffsets[key].y);
+    
+    // حساب النسب لتحديد أي اتجاه يحتاج تحريك (المنطق الذي طلبتهِ)
+    const sRatio = sourceImg.width / sourceImg.height;
+    const tRatio = size.w / size.h;
+    
+    const needsHorizontal = sRatio > tRatio; // لو الصورة أعرض من المطلوب
+    const needsVertical = sRatio < tRatio;   // لو الصورة أطول من المطلوب
+
     const card = document.createElement("div");
     card.style.cssText = "background:#fff; border:1px solid #eee; border-radius:15px; overflow:hidden; box-shadow:0 10px 20px rgba(0,0,0,0.05); padding:15px;";
     
@@ -135,16 +151,26 @@ function renderGrid() {
       </div>
       <div style="font-size:14px; font-weight:bold; margin-bottom:12px;">${size.n}</div>
       
-      <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px;">
-        <label style="font-size:11px; color:#666;">تحريك يمين / شمال:</label>
-        <input type="range" min="0" max="1" step="0.001" value="${currentOffsets[key].x}" 
-          style="width:100%; cursor:pointer; margin-bottom:10px;" 
-          oninput="updateAxis('${key}', 'x', this.value, ${size.w}, ${size.h})">
+      <div style="background:#f9f9f9; padding:12px; border-radius:8px; margin-bottom:15px; min-height:50px; display:flex; flex-direction:column; justify-content:center;">
         
-        <label style="font-size:11px; color:#666;">تحريك فوق / تحت:</label>
-        <input type="range" min="0" max="1" step="0.001" value="${currentOffsets[key].y}" 
-          style="width:100%; cursor:pointer;" 
-          oninput="updateAxis('${key}', 'y', this.value, ${size.w}, ${size.h})">
+        ${needsHorizontal ? `
+          <label style="font-size:11px; color:#1a73e8; font-weight:bold; margin-bottom:5px;">↔️ تحريك يمين / شمال:</label>
+          <input type="range" min="0" max="1" step="0.001" value="${currentOffsets[key].x}" 
+            style="width:100%; cursor:pointer;" 
+            oninput="updateAxis('${key}', 'x', this.value, ${size.w}, ${size.h})">
+        ` : ''}
+
+        ${needsVertical ? `
+          <label style="font-size:11px; color:#1a73e8; font-weight:bold; margin-bottom:5px;">↕️ تحريك فوق / تحت:</label>
+          <input type="range" min="0" max="1" step="0.001" value="${currentOffsets[key].y}" 
+            style="width:100%; cursor:pointer;" 
+            oninput="updateAxis('${key}', 'y', this.value, ${size.w}, ${size.h})">
+        ` : ''}
+
+        ${!needsHorizontal && !needsVertical ? `
+          <div style="font-size:11px; color:#28a745; text-align:center;">المقاس مطابق تماماً ✅</div>
+        ` : ''}
+        
       </div>
 
       <a id="dl-${key}" href="${dataUrl}" download="${size.n}_HD.jpg" style="display:block; text-align:center; background:#1a73e8; color:white; text-decoration:none; padding:12px; border-radius:8px; font-size:13px; font-weight:bold;">تحميل بجودة أصلية</a>
@@ -164,7 +190,6 @@ function drawHQ(tw, th, offX, offY) {
   const canvas = document.getElementById("workCanvas");
   const ctx = canvas.getContext("2d");
   
-  // High-Resolution Scale
   canvas.width = tw;
   canvas.height = th;
   
@@ -173,13 +198,11 @@ function drawHQ(tw, th, offX, offY) {
 
   const sW = sourceImg.width;
   const sH = sourceImg.height;
-  
   const sRatio = sW / sH;
   const tRatio = tw / th;
 
   let drawW, drawH;
 
-  // Cover logic (to fill the frame)
   if (sRatio > tRatio) {
     drawH = th;
     drawW = th * sRatio;
@@ -188,11 +211,9 @@ function drawHQ(tw, th, offX, offY) {
     drawH = tw / sRatio;
   }
 
-  // Calculate coordinates based on independent sliders
   const dx = (tw - drawW) * offX;
   const dy = (th - drawH) * offY;
 
-  // Render
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, tw, th);
   ctx.drawImage(sourceImg, dx, dy, drawW, drawH);
@@ -222,6 +243,7 @@ document.getElementById("fileInput").onchange = e => {
       sourceImg = img;
       document.getElementById("previewThumb").src = ev.target.result;
       document.getElementById("previewThumb").style.display = "block";
+      document.getElementById("uploadText").innerText = "تم رفع الصورة بنجاح ✅";
       updateBtn();
     };
     img.src = ev.target.result;
@@ -231,3 +253,6 @@ document.getElementById("fileInput").onchange = e => {
 
 renderPlatforms();
 </script>
+
+</body>
+</html>
